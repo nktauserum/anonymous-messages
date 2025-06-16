@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/nktauserum/anonymous-messages/internal/app"
+	"github.com/nktauserum/anonymous-messages/app"
 	"log"
 )
 
