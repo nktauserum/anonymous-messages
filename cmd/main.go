@@ -1,7 +1,14 @@
 package main
 
-import "log"
+import (
+	"github.com/nktauserum/anonymous-messages/internal/app"
+	"log"
+)
 
 func main() {
-	log.Println("Hello World!")
+	application := app.NewApplication()
+
+	if err := application.Run(); err != nil {
+		log.Fatalln(err)
+	}
 }
