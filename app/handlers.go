@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/mymmrac/telego"
 	tu "github.com/mymmrac/telego/telegoutil"
@@ -11,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 func Message(c *gin.Context) {
@@ -24,7 +26,7 @@ func Message(c *gin.Context) {
 		return
 	}
 
-	message := c.PostForm("message")
+	message := fmt.Sprintf("%s\n\n<i>⌚️ %s</i>", c.PostForm("message"), time.Now().Format("15:04 02.01.2006"))
 
 	file, err := c.FormFile("file")
 	if err != nil {
@@ -35,9 +37,11 @@ func Message(c *gin.Context) {
 			return
 		}
 
+		// Если изображения нет
 		params := &telego.SendMessageParams{
-			ChatID: tu.ID(conf.Telegram.Admin),
-			Text:   message,
+			ChatID:    tu.ID(conf.Telegram.Admin),
+			Text:      message,
+			ParseMode: telego.ModeHTML,
 		}
 
 		_, err = tgbot.SendMessage(context.Background(), params)
@@ -50,6 +54,7 @@ func Message(c *gin.Context) {
 
 		return
 	}
+	// Если изображение есть
 	filename := filepath.Base(file.Filename)
 
 	if err := c.SaveUploadedFile(file, filename); err != nil {
@@ -67,11 +72,14 @@ func Message(c *gin.Context) {
 		})
 		return
 	}
+	defer img_file.Close()
 
 	params := &telego.SendPhotoParams{
-		ChatID:  tu.ID(conf.Telegram.Admin),
-		Photo:   telego.InputFile{File: img_file},
-		Caption: message,
+		ChatID:                tu.ID(conf.Telegram.Admin),
+		Photo:                 telego.InputFile{File: img_file},
+		Caption:               message,
+		ParseMode:             telego.ModeHTML,
+		ShowCaptionAboveMedia: true,
 	}
 
 	_, err = tgbot.SendPhoto(context.Background(), params)
@@ -81,5 +89,4 @@ func Message(c *gin.Context) {
 		})
 		return
 	}
-
 }
