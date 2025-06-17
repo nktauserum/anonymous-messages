@@ -13,6 +13,10 @@ type Config struct {
 		Admin int64  `yaml:"admin"`
 	} `yaml:"telegram"`
 	Port int64 `yaml:"port"`
+	TLS  struct {
+		Certificate string `yaml:"crt"`
+		Key         string `yaml:"key"`
+	} `yaml:"tls"`
 }
 
 var (
