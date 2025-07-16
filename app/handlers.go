@@ -4,27 +4,32 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/mymmrac/telego"
-	tu "github.com/mymmrac/telego/telegoutil"
-	"github.com/nktauserum/anonymous-messages/bot"
-	"github.com/nktauserum/anonymous-messages/config"
 	"net/http"
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/mymmrac/telego"
+	tu "github.com/mymmrac/telego/telegoutil"
+	"github.com/nktauserum/anonymous-messages/config"
 )
 
-func Message(c *gin.Context) {
-	conf := config.MustLoadConfig()
+type Handler struct {
+	b *telego.Bot
+}
 
-	tgbot, err := bot.LoadBot()
+func NewHandler(token string) (*Handler, error) {
+	bot, err := telego.NewBot(token, telego.WithDefaultLogger(false, true))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
-		})
-		return
+		return nil, err
 	}
+
+	return &Handler{b: bot}, nil
+}
+
+func (h *Handler) Message(c *gin.Context) {
+	conf := config.MustLoadConfig()
 
 	message := fmt.Sprintf("%s\n\n<i>⌚️ %s</i>", c.PostForm("message"), time.Now().Format("15:04 02.01.2006"))
 
@@ -44,7 +49,7 @@ func Message(c *gin.Context) {
 			ParseMode: telego.ModeHTML,
 		}
 
-		_, err = tgbot.SendMessage(context.Background(), params)
+		_, err = h.b.SendMessage(context.Background(), params)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error": err.Error(),
@@ -82,7 +87,7 @@ func Message(c *gin.Context) {
 		ShowCaptionAboveMedia: true,
 	}
 
-	_, err = tgbot.SendPhoto(context.Background(), params)
+	_, err = h.b.SendPhoto(context.Background(), params)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
