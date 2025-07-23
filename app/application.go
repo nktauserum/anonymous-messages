@@ -8,6 +8,8 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/mymmrac/telego"
+	"github.com/nktauserum/anonymous-messages/article"
 	"github.com/nktauserum/anonymous-messages/config"
 )
 
@@ -32,9 +34,20 @@ func (a *Application) Run() error {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	handler, err := NewHandler(a.c.Telegram.Token)
+	bot, err := telego.NewBot(a.c.Telegram.Token, telego.WithDefaultLogger(false, true))
 	if err != nil {
 		return err
+	}
+
+	// TODO: вынести значение пути в конфиг
+	service, err := article.NewArticleStorage("sqlite.db")
+	if err != nil {
+		return err
+	}
+
+	handler := Handler{
+		b:       bot,
+		service: service,
 	}
 
 	//Healthcheck
@@ -43,6 +56,12 @@ func (a *Application) Run() error {
 			"status": "success",
 		})
 	})
+
+	a.r.POST("/articles/add", handler.CreateArticle)
+	a.r.GET("/articles/:uuid", handler.ReadArticle)
+	a.r.PUT("/articles/update/:uuid", handler.UpdateArticle)
+	a.r.GET("/articles/list", handler.ListArticles)
+	a.r.DELETE("/articles/delete/:uuid", handler.DeleteArticle)
 
 	a.r.POST("/message", handler.Message)
 

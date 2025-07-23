@@ -2,4 +2,5 @@
 .vscode
 .env
 config.yml
-build/
+build
+sqlite.db
